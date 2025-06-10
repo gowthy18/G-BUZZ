@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IITG Academic Calendar & Analytics Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: float 20s infinite linear;
+        }
+
+        @keyframes float {
+            0% { transform: translateX(-50px) translateY(-50px); }
+            100% { transform: translateX(0) translateY(0); }
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+
+        .nav-tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 3px solid #e9ecef;
+        }
+
+        .nav-tab {
+            flex: 1;
+            padding: 20px;
+            text-align: center;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #6c757d;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .nav-tab:hover {
+            background: rgba(102, 126, 234, 0.1);
+            color: #495057;
+        }
+
+        .nav-tab.active {
+            color: #1e3c72;
+            background: white;
+        }
+
+        .nav-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .tab-content {
+            display: none;
+            padding: 30px;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .weather-widget {
+            background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(116, 185, 255, 0.3);
+        }
+
+        .weather-info {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .weather-main {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+
+        .weather-temp {
+            font-size: 3rem;
+            font-weight: 300;
+        }
+
+        .events-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-top: 20px;
+        }
+
+        .event-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            border-left: 5px solid;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .event-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, transparent 0%, rgba(102, 126, 234, 0.05) 100%);
+            z-index: 0;
+        }
+
+        .event-card > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .event-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .event-exam { border-left-color: #e74c3c; }
+        .event-festival { border-left-color: #f39c12; }
+        .event-academic { border-left-color: #3498db; }
+        .event-holiday { border-left-color: #27ae60; }
+        .event-deadline { border-left-color: #9b59b6; }
+
+        .event-date {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .event-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #34495e;
+        }
+
+        .event-description {
+            color: #7f8c8d;
+            line-height: 1.5;
+        }
+
+        .event-type {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-top: 10px;
+            text-transform: uppercase;
+        }
+
+        .type-exam { background: #ffebee; color: #c62828; }
+        .type-festival { background: #fff3e0; color: #ef6c00; }
+        .type-academic { background: #e3f2fd; color: #1565c0; }
+        .type-holiday { background: #e8f5e8; color: #2e7d32; }
+        .type-deadline { background: #f3e5f5; color: #7b1fa2; }
+
+        .placement-section {
+            text-align: center;
+        }
+
+        .placement-controls {
+            margin-bottom: 30px;
+        }
+
+        .dropdown {
+            display: inline-block;
+            position: relative;
+            margin: 0 15px;
+        }
+
+        .dropdown-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .dropdown-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+
+        .dropdown-content.show {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .dropdown-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            color: #495057;
+        }
+
+        .dropdown-item:hover {
+            background: #f8f9fa;
+        }
+
+        .chart-container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .chart-canvas {
+            max-width: 100%;
+            height: 400px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            color: #7f8c8d;
+            font-weight: 600;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: #7f8c8d;
+        }
+
+        .loading::after {
+            content: '';
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #7f8c8d;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .nav-tabs {
+                flex-direction: column;
+            }
+            
+            .weather-info {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .events-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .container {
+                margin: 10px;
+                border-radius: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎓 IITG Academic Dashboard</h1>
+            <p>Official Academic Calendar Integration & Analytics</p>
+        </div>
+
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="showTab('calendar')">📅 Academic Calendar</button>
+            <button class="nav-tab" onclick="showTab('weather')">🌤️ Weather</button>
+            <button class="nav-tab" onclick="showTab('placements')">📊 Placements</button>
+        </div>
+
+        <div id="calendar" class="tab-content active">
+            <h2 style="text-align: center; margin-bottom: 30px; color: #2c3e50;">🎉 Events, Holidays & Fests Timeline</h2>
+            <div class="events-grid" id="eventsGrid">
+                <!-- Events will be loaded here -->
+            </div>
+        </div>
+
+        <div id="weather" class="tab-content">
+            <div class="weather-widget">
+                <h2 style="margin-bottom: 20px;">🌤️ Live Weather - Guwahati</h2>
+                <div class="weather-info" id="weatherInfo">
+                    <div class="loading">Loading weather data...</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="placements" class="tab-content">
+            <div class="placement-section">
+                <h2 style="margin-bottom: 30px; color: #2c3e50;">📊 Department-wise Placement Analytics</h2>
+                
+                <div class="placement-controls">
+                    <div class="dropdown">
+                        <button class="dropdown-btn" onclick="toggleDropdown('departmentDropdown')">
+                            Select Department ▼
+                        </button>
+                        <div class="dropdown-content" id="departmentDropdown">
+                            <div class="dropdown-item" onclick="selectDepartment('CSE')">Computer Science & Engineering</div>
+                            <div class="dropdown-item" onclick="selectDepartment('ECE')">Electronics & Communication</div>
+                            <div class="dropdown-item" onclick="selectDepartment('ME')">Mechanical Engineering</div>
+                            <div class="dropdown-item" onclick="selectDepartment('CE')">Civil Engineering</div>
+                            <div class="dropdown-item" onclick="selectDepartment('EEE')">Electrical Engineering</div>
+                            <div class="dropdown-item" onclick="selectDepartment('CHE')">Chemical Engineering</div>
+                        </div>
+                    </div>
+
+                    <div class="dropdown">
+                        <button class="dropdown-btn" onclick="toggleDropdown('yearDropdown')">
+                            Select Year ▼
+                        </button>
+                        <div class="dropdown-content" id="yearDropdown">
+                            <div class="dropdown-item" onclick="selectYear('2024')">2024</div>
+                            <div class="dropdown-item" onclick="selectYear('2023')">2023</div>
+                            <div class="dropdown-item" onclick="selectYear('2022')">2022</div>
+                            <div class="dropdown-item" onclick="selectYear('2021')">2021</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <canvas id="placementChart" class="chart-canvas"></canvas>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalPlacements">--</div>
+                        <div class="stat-label">Total Placements</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="avgPackage">--</div>
+                        <div class="stat-label">Average Package (LPA)</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="topPackage">--</div>
+                        <div class="stat-label">Highest Package (LPA)</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="placementRate">--</div>
+                        <div class="stat-label">Placement Rate (%)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Academic Events Data from Official IITG Calendar
+        const academicEvents = [
+            // Winter Semester 2025 Events
+            { date: '2025-01-02', title: 'First Day of Instruction - Winter Semester', type: 'academic', description: 'Classes begin for Winter Semester 2025' },
+            { date: '2025-01-08', title: 'Last Date for Late Registration', type: 'deadline', description: 'Final deadline for course registration with fine' },
+            { date: '2025-01-13', title: 'Course Adjustment Deadline', type: 'deadline', description: 'Last date for course adjustment and SA course registration' },
+            { date: '2025-01-17', title: 'Udgam - Entrepreneurship Summit', type: 'festival', description: 'Annual Entrepreneurship Summit (17-19 Jan)' },
+            { date: '2025-01-31', title: 'Alcheringa Cultural Festival', type: 'festival', description: 'Students Annual Cultural Festival (31 Jan - 2 Feb)' },
+            { date: '2025-02-23', title: 'Mid-Semester Examinations Begin', type: 'exam', description: 'Mid-semester exams (23 Feb - 2 Mar)' },
+            { date: '2025-03-14', title: 'No Class Day', type: 'holiday', description: 'Academic break day' },
+            { date: '2025-03-20', title: 'Course Drop Deadline', type: 'deadline', description: 'Last date for dropping courses' },
+            { date: '2025-04-06', title: 'Graduation Tea Party', type: 'festival', description: 'Farewell celebration for graduates' },
+            { date: '2025-04-25', title: 'Last Day of Winter Semester', type: 'academic', description: 'Final day of instruction' },
+            { date: '2025-04-27', title: 'End-Semester Examinations Begin', type: 'exam', description: 'Final exams (27 Apr - 4 May)' },
+            
+            // Summer Term 2025 Events
+            { date: '2025-05-05', title: 'Summer Term Begins', type: 'academic', description: 'First day of Summer Term 2025' },
+            { date: '2025-05-30', title: 'Summer Mid-Term Exams', type: 'exam', description: 'Mid-term examinations (30 May - 1 Jun)' },
+            { date: '2025-06-26', title: 'Summer Term Ends', type: 'academic', description: 'Last day of instruction' },
+            { date: '2025-06-27', title: 'Summer End-Term Exams', type: 'exam', description: 'Final examinations (27-29 June)' },
+            { date: '2025-07-13', title: '27th Convocation', type: 'festival', description: 'Annual Convocation Ceremony' },
+            
+            // Monsoon Semester 2025 Events
+            { date: '2025-07-23', title: 'Monsoon Semester Begins', type: 'academic', description: 'First day of Monsoon Semester 2025' },
+            { date: '2025-08-15', title: 'Independence Day', type: 'holiday', description: 'National Holiday' },
+            { date: '2025-08-29', title: 'Techniche Technical Festival', type: 'festival', description: 'Annual Technical Festival (29-31 Aug)' },
+            { date: '2025-09-14', title: 'Mid-Semester Examinations', type: 'exam', description: 'Mid-semester exams (14-21 Sep)' },
+            { date: '2025-10-31', title: 'Spirit Sports Festival', type: 'festival', description: 'Annual Sports Festival (31 Oct - 2 Nov)' },
+            { date: '2025-11-14', title: 'Last Day of Monsoon Semester', type: 'academic', description: 'Final day of instruction' },
+            { date: '2025-11-16', title: 'End-Semester Examinations', type: 'exam', description: 'Final exams (16-24 Nov)' },
+            { date: '2025-12-25', title: 'Christmas Day', type: 'holiday', description: 'National Holiday' },
+            { date: '2025-12-26', title: 'Supplementary Examinations', type: 'exam', description: 'Supplementary exams (26-31 Dec)' }
+        ];
+
+        // Placement Data (Sample - based on typical IITG statistics)
+        const placementData = {
+            'CSE': {
+                2024: { placed: 85, total: 95, avg: 18.5, highest: 55, companies: ['Google', 'Microsoft', 'Amazon', 'Goldman Sachs'] },
+                2023: { placed: 82, total: 90, avg: 17.2, highest: 52, companies: ['Meta', 'Apple', 'Netflix', 'Uber'] },
+                2022: { placed: 78, total: 88, avg: 16.8, highest: 48, companies: ['Adobe', 'Salesforce', 'Oracle', 'IBM'] },
+                2021: { placed: 75, total: 85, avg: 15.5, highest: 45, companies: ['Flipkart', 'PayTM', 'Ola', 'Zomato'] }
+            },
+            'ECE': {
+                2024: { placed: 72, total: 85, avg: 12.8, highest: 35, companies: ['Intel', 'Qualcomm', 'Samsung', 'TI'] },
+                2023: { placed: 68, total: 82, avg: 12.2, highest: 32, companies: ['MediaTek', 'Broadcom', 'Nvidia', 'AMD'] },
+                2022: { placed: 65, total: 80, avg: 11.8, highest: 30, companies: ['Cisco', 'Juniper', 'Nokia', 'Ericsson'] },
+                2021: { placed: 62, total: 78, avg: 11.2, highest: 28, companies: ['Airtel', 'Jio', 'Vodafone', 'BSNL'] }
+            },
+            'ME': {
+                2024: { placed: 68, total: 82, avg: 9.5, highest: 22, companies: ['Tata Motors', 'Mahindra', 'L&T', 'BHEL'] },
+                2023: { placed: 65, total: 80, avg: 9.2, highest: 20, companies: ['Bajaj Auto', 'Hero MotoCorp', 'TVS', 'Ashok Leyland'] },
+                2022: { placed: 62, total: 78, avg: 8.8, highest: 18, companies: ['Maruti Suzuki', 'Hyundai', 'Ford', 'Toyota'] },
+                2021: { placed: 58, total: 75, avg: 8.2, highest: 16, companies: ['ONGC', 'IOCL', 'GAIL', 'NTPC'] }
+            },
+            'CE': {
+                2024: { placed: 58, total: 75, avg: 8.2, highest: 18, companies: ['L&T', 'Tata Projects', 'Shapoorji', 'DLF'] },
+                2023: { placed: 55, total: 72, avg: 7.8, highest: 16, companies: ['Godrej', 'Sobha', 'Brigade', 'Prestige'] },
+                2022: { placed: 52, total: 70, avg: 7.5, highest: 15, companies: ['CPWD', 'PWD', 'NHAI', 'Railways'] },
+                2021: { placed: 48, total: 68, avg: 7.2, highest: 14, companies: ['RITES', 'IRCON', 'NHPC', 'SJVN'] }
+            },
+            'EEE': {
+                2024: { placed: 65, total: 78, avg: 10.2, highest: 25, companies: ['NTPC', 'PGCIL', 'NHPC', 'Siemens'] },
+                2023: { placed: 62, total: 75, avg: 9.8, highest: 23, companies: ['ABB', 'Schneider', 'GE', 'Honeywell'] },
+                2022: { placed: 58, total: 72, avg: 9.5, highest: 21, companies: ['Crompton', 'Havells', 'Bajaj Electricals', 'Polycab'] },
+                2021: { placed: 55, total: 70, avg: 9.2, highest: 19, companies: ['Tata Power', 'Adani Power', 'JSW Energy', 'Torrent Power'] }
+            },
+            'CHE': {
+                2024: { placed: 52, total: 68, avg: 9.8, highest: 20, companies: ['Reliance', 'ONGC', 'IOCL', 'BPCL'] },
+                2023: { placed: 50, total: 65, avg: 9.5, highest: 18, companies: ['Hindustan Unilever', 'P&G', 'Nestle', 'ITC'] },
+                2022: { placed: 48, total: 63, avg: 9.2, highest: 17, companies: ['Tata Chemicals', 'UPL', 'Pidilite', 'Asian Paints'] },
+                2021: { placed: 45, total: 60, avg: 8.8, highest: 16, companies: ['GAIL', 'Cairn', 'Vedanta', 'Hindalco'] }
+            }
+        };
+
+        let currentDept = null;
+        let currentYear = null;
+        let placementChart = null;
+
+        // Initialize the dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            loadEvents();
+            loadWeather();
+        });
+
+        function showTab(tabName) {
+            // Hide all tabs
+            const tabs = document.querySelectorAll('.tab-content');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            // Remove active class from nav tabs
+            const navTabs = document.querySelectorAll('.nav-tab');
+            navTabs.forEach(tab => tab.classList.remove('active'));
+            
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        function loadEvents() {
+            const eventsGrid = document.getElementById('eventsGrid');
+            const currentDate = new Date();
+            
+            // Sort events by date and filter upcoming events
+            const upcomingEvents = academicEvents
+                .filter(event => new Date(event.date) >= currentDate)
+                .sort((a, b) => new Date(a.date) - new Date(b.date))
+                .slice(0, 12); // Show next 12 events
+
+            eventsGrid.innerHTML = upcomingEvents.map(event => {
+                const eventDate = new Date(event.date);
+                const formattedDate = eventDate.toLocaleDateString('en-IN', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+
+                return `
+                    <div class="event-card event-${event.type}">
+                        <div class="event-date">${formattedDate}</div>
+                        <div class="event-title">${event.title}</div>
+                        <div class="event-description">${event.description}</div>
+                        <span class="event-type type-${event.type}">${event.type}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+       
+        async function loadWeather() {
+            const weatherInfo = document.getElementById('weatherInfo');
+            
+            try {
+                // Replace 'YOUR_API_KEY_HERE' with your actual OpenWeatherMap API key
+                const API_KEY = 'f9b8b8a70142f8515b9c9be9a0a6f367';
+                const city = 'Guwahati';
+                const country = 'IN';
+                
+                // Fetch current weather data from OpenWeatherMap API
+                const response = await fetch(
+                    `https://api.openweathermap.org/data/2.5/weather?q=${city},${country}&appid=${API_KEY}&units=metric`
+                );
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                const weatherData = {
+                    location: `${data.name}, ${data.sys.country}`,
+                    temperature: Math.round(data.main.temp),
+                    description: data.weather[0].description.charAt(0).toUpperCase() + data.weather[0].description.slice(1),
+                    humidity: data.main.humidity,
+                    windSpeed: Math.round(data.wind.speed * 3.6), // Convert m/s to km/h
+                    feelsLike: Math.round(data.main.feels_like),
+                    pressure: data.main.pressure,
+                    visibility: data.visibility ? Math.round(data.visibility / 1000) : 'N/A',
+                    icon: data.weather[0].icon
+                };
+
+                weatherInfo.innerHTML = `
+                    <div>
+                        <div class="weather-main">${weatherData.location}</div>
+                        <div style="opacity: 0.9; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                            <img src="https://openweathermap.org/img/wn/${weatherData.icon}@2x.png" 
+                                 alt="${weatherData.description}" 
+                                 style="width: 50px; height: 50px;">
+                            ${weatherData.description}
+                        </div>
+                    </div>
+                    <div class="weather-temp">${weatherData.temperature}°C</div>
+                    <div>
+                        <div>Feels like ${weatherData.feelsLike}°C</div>
+                        <div>Humidity: ${weatherData.humidity}%</div>
+                        <div>Wind: ${weatherData.windSpeed} km/h</div>
+                        <div>Pressure: ${weatherData.pressure} hPa</div>
+                        <div>Visibility: ${weatherData.visibility} km</div>
+                    </div>
+                `;
+                
+                // Update last updated time
+                const lastUpdated = new Date().toLocaleTimeString('en-IN', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    timeZone: 'Asia/Kolkata'
+                });
+                
+                const updateInfo = document.createElement('div');
+                updateInfo.style.cssText = `
+                    font-size: 0.8rem;
+                    opacity: 0.7;
+                    margin-top: 15px;
+                    text-align: center;
+                `;
+                updateInfo.textContent = `Last updated: ${lastUpdated} IST`;
+                weatherInfo.appendChild(updateInfo);
+                
+            } catch (error) {
+                console.error('Weather API Error:', error);
+                weatherInfo.innerHTML = `
+                    <div style="color: rgba(255,255,255,0.8); text-align: center;">
+                        <div style="font-size: 1.2rem; margin-bottom: 10px;">⚠️</div>
+                        <div>Weather data temporarily unavailable</div>
+                        <div style="font-size: 0.9rem; opacity: 0.7; margin-top: 5px;">
+                            ${error.message.includes('API key') ? 'Please check your API key' : 'Please check your internet connection'}
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function toggleDropdown(dropdownId) {
+            const dropdown = document.getElementById(dropdownId);
+            const isShow = dropdown.classList.contains('show');
+            
+            // Close all dropdowns
+            document.querySelectorAll('.dropdown-content').forEach(d => d.classList.remove('show'));
+            
+            // Toggle current dropdown
+            if (!isShow) {
+                dropdown.classList.add('show');
+            }
+        }
+
+        function selectDepartment(dept) {
+            currentDept = dept;
+            document.querySelector('#departmentDropdown').previousElementSibling.textContent = 
+                document.querySelector(`[onclick="selectDepartment('${dept}')"]`).textContent + ' ▼';
+            toggleDropdown('departmentDropdown');
+            updatePlacementChart();
+        }
+
+        function selectYear(year) {
+            currentYear = year;
+            document.querySelector('#yearDropdown').previousElementSibling.textContent = `${year} ▼`;
+            toggleDropdown('yearDropdown');
+            updatePlacementChart();
+        }
+
+        function updatePlacementChart() {
+            if (!currentDept || !currentYear) return;
+
+            const data = placementData[currentDept][currentYear];
+            
+            // Update statistics
+            document.getElementById('totalPlacements').textContent = data.placed;
+            document.getElementById('avgPackage').textContent = data.avg;
+            document.getElementById('topPackage').textContent = data.highest;
+            document.getElementById('placementRate').textContent = Math.round((data.placed / data.total) * 100);
+
+            // Create/Update Chart
+            const ctx = document.getElementById('placementChart').getContext('2d');
+            
+            if (placementChart) {
+                placementChart.destroy();
+            }
+
+            const unplaced = data.total - data.placed;
+            
+            placementChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Placed', 'Unplaced'],
+                    datasets: [{
+                        data: [data.placed, unplaced],
+                        backgroundColor: [
+                            'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                            '#e9ecef'
+                        ],
+                        borderWidth: 0,
+                        cutout: '60%'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                font: {
+                                    size: 14,
+                                    weight: 'bold'
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed;
+                                    const percentage = Math.round((value / data.total) * 100);
+                                    return `${label}: ${value} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    },
+                    elements: {
+                        arc: {
+                            borderWidth: 0
+                        }
+                    },
+                    animation: {
+                        animateRotate: true,
+                        duration: 1000
+                    }
+                }
+            });
+
+            // Add center text
+            const centerText = {
+                id: 'centerText',
+                beforeDraw: function(chart) {
+                    const ctx = chart.ctx;
+                    const centerX = chart.chartArea.left + (chart.chartArea.right - chart.chartArea.left) / 2;
+                    const centerY = chart.chartArea.top + (chart.chartArea.bottom - chart.chartArea.top) / 2;
+                    
+                    ctx.save();
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.font = 'bold 24px Arial';
+                    ctx.fillStyle = '#2c3e50';
+                    ctx.fillText(`${Math.round((data.placed / data.total) * 100)}%`, centerX, centerY - 10);
+                    
+                    ctx.font = '14px Arial';
+                    ctx.fillStyle = '#7f8c8d';
+                    ctx.fillText('Placement Rate', centerX, centerY + 15);
+                    ctx.restore();
+                }
+            };
+
+            Chart.register(centerText);
+        }
+
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', function(event) {
+            if (!event.target.closest('.dropdown')) {
+                document.querySelectorAll('.dropdown-content').forEach(d => d.classList.remove('show'));
+            }
+        });
+
+        // Chart.js CDN Loading
+        if (!window.Chart) {
+            const script = document.createElement('script');
+            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js';
+            script.onload = function() {
+                console.log('Chart.js loaded successfully');
+            };
+            document.head.appendChild(script);
+        }
+
+        // Auto-refresh weather every 10 minutes
+        setInterval(loadWeather, 600000);
+
+        // Add some interactive animations
+        document.querySelectorAll('.event-card').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-5px) scale(1.02)';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0) scale(1)';
+            });
+        });
+
+        // Add keyboard navigation
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                document.querySelectorAll('.dropdown-content').forEach(d => d.classList.remove('show'));
+            }
+        });
+
+        // Initialize tooltips for better UX
+        function addTooltips() {
+            const elements = document.querySelectorAll('[data-tooltip]');
+            elements.forEach(element => {
+                element.addEventListener('mouseenter', function() {
+                    const tooltip = document.createElement('div');
+                    tooltip.className = 'tooltip';
+                    tooltip.textContent = this.getAttribute('data-tooltip');
+                    tooltip.style.cssText = `
+                        position: absolute;
+                        background: rgba(0,0,0,0.8);
+                        color: white;
+                        padding: 8px 12px;
+                        border-radius: 6px;
+                        font-size: 12px;
+                        pointer-events: none;
+                        z-index: 1000;
+                        white-space: nowrap;
+                    `;
+                    document.body.appendChild(tooltip);
+                    
+                    const rect = this.getBoundingClientRect();
+                    tooltip.style.left = rect.left + 'px';
+                    tooltip.style.top = (rect.top - tooltip.offsetHeight - 10) + 'px';
+                });
+                
+                element.addEventListener('mouseleave', function() {
+                    const tooltip = document.querySelector('.tooltip');
+                    if (tooltip) tooltip.remove();
+                });
+            });
+        }
+
+        // Performance optimization: lazy load images if any
+        function lazyLoadImages() {
+            const images = document.querySelectorAll('img[data-src]');
+            const imageObserver = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const img = entry.target;
+                        img.src = img.dataset.src;
+                        img.classList.remove('lazy');
+                        observer.unobserve(img);
+                    }
+                });
+            });
+
+            images.forEach(img => imageObserver.observe(img));
+        }
+
+        // Initialize all features
+        setTimeout(() => {
+            addTooltips();
+            lazyLoadImages();
+        }, 1000);
+
+        // Add smooth scrolling for better navigation
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Service Worker registration for offline support (optional)
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js').then(function(registration) {
+                    console.log('ServiceWorker registration successful');
+                }, function(err) {
+                    console.log('ServiceWorker registration failed');
+                });
+            });
+        }
+
+        // Add PWA installation prompt
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            
+            // Show install button
+            const installBtn = document.createElement('button');
+            installBtn.textContent = '📱 Install App';
+            installBtn.className = 'install-btn';
+            installBtn.style.cssText = `
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                border: none;
+                padding: 12px 20px;
+                border-radius: 25px;
+                cursor: pointer;
+                font-weight: bold;
+                box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+                z-index: 1000;
+                transition: all 0.3s ease;
+            `;
+            
+            installBtn.addEventListener('click', async () => {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    const { outcome } = await deferredPrompt.userChoice;
+                    if (outcome === 'accepted') {
+                        installBtn.remove();
+                    }
+                    deferredPrompt = null;
+                }
+            });
+            
+            document.body.appendChild(installBtn);
+        });
+
+        // Add dark mode toggle (optional enhancement)
+        function addDarkModeToggle() {
+            const darkModeBtn = document.createElement('button');
+            darkModeBtn.innerHTML = '🌙';
+            darkModeBtn.className = 'dark-mode-toggle';
+            darkModeBtn.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: rgba(255, 255, 255, 0.2);
+                color: white;
+                border: none;
+                padding: 10px;
+                border-radius: 50%;
+                cursor: pointer;
+                font-size: 18px;
+                z-index: 1000;
+                backdrop-filter: blur(10px);
+                transition: all 0.3s ease;
+            `;
+            
+            darkModeBtn.addEventListener('click', function() {
+                document.body.classList.toggle('dark-mode');
+                this.innerHTML = document.body.classList.contains('dark-mode') ? '☀️' : '🌙';
+            });
+            
+            document.body.appendChild(darkModeBtn);
+        }
+
+        // Initialize dark mode toggle
+        setTimeout(addDarkModeToggle, 500);
+
+        console.log('🎓 IITG Academic Dashboard initialized successfully!');
+        console.log('📊 Features loaded: Calendar, Weather, Placements');
+        console.log('🚀 Dashboard ready for use!');
+    </script>
+</body>
+</html>
